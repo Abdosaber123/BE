@@ -1,14 +1,26 @@
 import connectDB from "./DB/connction.js";
 import authRouter from "./Module/auth/register/register.controller.js"
 import userRouter from "./Module/user/user.controller.js"
+import messageRouter from "./Module/Message/message.controller.js"
 import fs  from 'fs';
 import { verfifyToken } from "./utils/token/verifyToken.js";
 import { Token } from "./DB/Model/Token.js";
+import rateLimit from "express-rate-limit";
 export default function bootstra(app , express){
+  const limit = rateLimit({
+    windowMs : 2 * 60 * 1000,
+    limit :5,
+    handler: (req, res , next , options)=>{
+      throw new Error(options.message , {cause:options.statusCode})
+    },
+    skipSuccessfulRequests:true
+  })
+  app.use(limit)
  app.use(express.json());   
  app.use("/uploads" , express.static("uploads"))
  app.use("/auth" , authRouter)
  app.use("/user" , userRouter)
+ app.use("/message" , messageRouter)
  app.use( async (err , req , res , next) =>{
   if(req.file){
     fs.unlinkSync(req.file.path)
@@ -32,6 +44,6 @@ export default function bootstra(app , express){
  res.status(200).json({message:"User refresh successfully" , success:true , data:{accessToken , refreshToken}})
 }
 res.status(err.cause || 500).json({message:err.message , stack:err.stack ,success:false})
- connectDB();
 })
+connectDB();
 }

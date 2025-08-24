@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import { type } from "os";
 const schema = new Schema({
     firstName:{
         type:String,
@@ -55,9 +56,14 @@ const schema = new Schema({
         secure_url:String,
         public_id:String
     },
-    token:{
-        type:String,
+    creadetialUpdate:{
+        type:Date,
+        default:Date.now()
+    },
+    deleteAt:{
+        type:Date
     }
+  
 },{timestamps:true , versionKey:false , toObject:{virtuals:true} , toJSON:{virtuals:true} }  ) 
 schema.virtual("fullName").get(function(){
     return `${this.firstName} ${this.lastName}`
@@ -69,6 +75,11 @@ schema.virtual("fullName").set(function(value){
 })
 schema.virtual("age").get(function(){
     return new Date().getFullYear() - new Date(this.dob).getFullYear()
+})
+schema.virtual("messages" ,{
+    ref:"Message",
+    localField:"_id",
+    foreignField:"receiver"
 })
 
 export const User = model("User", schema)

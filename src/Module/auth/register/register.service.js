@@ -18,7 +18,7 @@ export const register = async (req, res, next) => {
             phone:generalField.phone,
             dob:generalField.dob
         })
-        const {error , value} = schema.validate(req.body)
+        const {error , value} = schema.validate({...req.body , ...req.params})
         if(error){
             let errorMsg = error.details.map((item)=>{return item.message})
             errorMsg = errorMsg.join(" , ")
@@ -123,12 +123,17 @@ export const login = async (req , res , next) => {
         if(!isMatch){
             throw new Error("Invalid credentials" , {cause:400})
         }
+    if(user.deleteAt){
+        user.deleteAt = undefined
+        await user.save()
+
+    }
         if(user.isVerified === false){
             throw new Error("User not verified" , {cause:400})
         }
         const accessToken = generateToken({
             payload:{id:user._id},
-            options :{expiresIn:"2m"}
+            options :{expiresIn:"1h"}
         })
         const refreshToken = generateToken({
             payload:{id:user._id},
@@ -170,6 +175,10 @@ export const resetPassword =  async (req,res,next)=>{
         throw new Error("Otp expired" , {cause:400})
     }
     userExists.password = hashPassword(newPassword)
+    userExists.creadetialUpdate = Date.now()
+    userExists.otp = undefined
+    userExists.expireOtp = undefined
+    await Token.deleteMany({user:userExists._id , type:"refresh"})
     await userExists.save()
     return res.status(200).json({message:"Password updated successfully" , success:true})
 //     const {oldPassword , newPassword} = req.body

@@ -12,11 +12,19 @@ export const validateToken = async (req , res , next)=>{
     if(blockedToken){
         throw new Error("token blocked" , {cause:400})
     }
-    const {id} = verfifyToken(token)
+    const {id , iat} = verfifyToken(token)
+   
+    
     const userExists = await User.findById(id)
     if(!userExists){
         throw new Error("user not defiend" , {cause:400})
     }
+    if(userExists.creadetialUpdate > new Date(iat * 1000)){
+        throw new Error("token expired" , {cause:401});
+        
+    }
+    console.log({creadetialUpdate:userExists.creadetialUpdate ,iat: iat});
+    
     req.user = userExists
     return next()
 }
