@@ -9,5 +9,6 @@ export function fileUpload({allowdType = ["image/jpeg" , "image/png"] , folder} 
             cb(new Error("Invalid file type"))
         }
     }
-    return multer({storage , fileFilter})
+    
+    return multer({storage , fileFilter , limits:{fileSize:1024 * 1024 * 5}})
 }

@@ -4,7 +4,7 @@ import { verfifyToken } from "../token/verifyToken.js"
 import  joi  from 'joi';
 
 export const validateToken = async (req , res , next)=>{ 
-    const token = req.headers.authorization
+    const token = req.headers.token
     if(!token){
         throw new Error("plse check your token" ,{cause:400})
     }
@@ -14,7 +14,6 @@ export const validateToken = async (req , res , next)=>{
     }
     const {id , iat} = verfifyToken(token)
    
-    
     const userExists = await User.findById(id)
     if(!userExists){
         throw new Error("user not defiend" , {cause:400})
@@ -23,7 +22,8 @@ export const validateToken = async (req , res , next)=>{
         throw new Error("token expired" , {cause:401});
         
     }
-    console.log({creadetialUpdate:userExists.creadetialUpdate ,iat: iat});
+    // await Token.updateOne({token , type:"refresh"} , {expireAt:iat * 1000})
+    // console.log({creadetialUpdate:userExists.creadetialUpdate ,iat: iat});
     
     req.user = userExists
     return next()

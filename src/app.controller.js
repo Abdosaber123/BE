@@ -3,7 +3,7 @@ import authRouter from "./Module/auth/register/register.controller.js"
 import userRouter from "./Module/user/user.controller.js"
 import messageRouter from "./Module/Message/message.controller.js"
 import fs  from 'fs';
-import { verfifyToken } from "./utils/token/verifyToken.js";
+import { generateToken, verfifyToken } from "./utils/token/verifyToken.js";
 import { Token } from "./DB/Model/Token.js";
 import rateLimit from "express-rate-limit";
 export default function bootstra(app , express){
@@ -22,12 +22,18 @@ export default function bootstra(app , express){
  app.use("/user" , userRouter)
  app.use("/message" , messageRouter)
  app.use( async (err , req , res , next) =>{
-  if(req.file){
-    fs.unlinkSync(req.file.path)
-  }
-  if(err.message == "jwt expired"){
-    const refreshToken = req.headers.refreshToken 
+   if(req.file){
+     fs.unlinkSync(req.file.path)
+    }
+ try {
+  if(err.message === "jwt expired"){
+    const oldToken = req.headers.token 
+    const refreshToken = req.headers.refreshtoken2 
+    // console.log(oldToken);
+    // console.log(refreshToken);
+    
     const {id} = verfifyToken(refreshToken)
+   
     const userExists = await  Token.findOneAndDelete({token:refreshToken , user: id , type:"refresh"})
     if(!userExists){
       throw new Error("invalid refresh token" , {cause:404})
@@ -40,10 +46,14 @@ export default function bootstra(app , express){
     payload:{id:userExists.user},
     options :{expiresIn:"7d"}
 })
+
+
  await Token.create({token:newRefreshToken , user:userExists.id , type:"refresh"})
- res.status(200).json({message:"User refresh successfully" , success:true , data:{accessToken , refreshToken}})
+return res.status(200).json({message:"User refresh successfully" , success:true , data:{accessToken , newRefreshToken}})
 }
-res.status(err.cause || 500).json({message:err.message , stack:err.stack ,success:false})
+ } catch (error) {
+  return res.status(error.cause || 500).json({message:error.message , stack:error.stack ,success:false})
+ }
 })
 connectDB();
 }

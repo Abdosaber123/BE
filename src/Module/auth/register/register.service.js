@@ -133,14 +133,14 @@ export const login = async (req , res , next) => {
         }
         const accessToken = generateToken({
             payload:{id:user._id},
-            options :{expiresIn:"1h"}
+            options :{expiresIn:"1m"}
         })
         const refreshToken = generateToken({
             payload:{id:user._id},
             options :{expiresIn:"7d"}
         })
         await Token.create({token:refreshToken , user:user._id , type:"refresh"})
-            
+        await Token.updateOne({user:user._id , type:"refresh"} , {expireAt:Date.now() +  60 * 1000})
        
         await user.save()
         return res.status(200).json({message:"User logged in successfully" , success:true , data:{accessToken , refreshToken}})

@@ -6,6 +6,7 @@ import schedule from "node-schedule"
 import { User } from "./DB/Model/user.js";
 import { deleteCloud } from "./utils/cload/cloadnari.config.js";
 import { Message } from "./DB/Model/Message.js";
+import { Token } from "./DB/Model/Token.js";
 schedule.scheduleJob("1 28 16 * * *" , async ()=>{
   const users = await User.find({deleteAt: {$lte : Date.now() - 3 * 30 * 24 * 60 * 60 * 1000}}) /// delete after 3month
   for (const user of users ){
@@ -16,6 +17,14 @@ schedule.scheduleJob("1 28 16 * * *" , async ()=>{
  await Message.deleteMany({receiver:{$in:users.map((user)=>{user._id})}})
  console.log('delete Succsses');
  
+})
+schedule.scheduleJob("1 45 20 * * *",async()=>{
+const token = await Token.findOne({expireAt:{$lte:Date.now()}} )
+if(token){
+await Token.deleteMany({expireAt:{$lte:Date.now()}})
+}
+console.log("donde delete");
+
 })
 const app = express();
 const port = process.env.PORT;

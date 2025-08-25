@@ -8,6 +8,9 @@ const schema = new Schema({
         type:String,
         enum:["access" , "refresh"],
         default:"access"
+    },
+    expireAt:{
+        type:Date
     }
 },{timestamps:true})
 export const Token  = model("Token" , schema)
